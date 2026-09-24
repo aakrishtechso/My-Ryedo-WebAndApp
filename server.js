@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
+import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
 import cookieParser from 'cookie-parser';
@@ -15,9 +16,24 @@ await mongoStore.connect();
 await authDatabase.initializeFromMongo();
 const app = express();
 const PORT = process.env.PORT || 3000;
+
 // Middleware
+app.use(cors({
+    origin: [
+        'https://myryedo.com',
+        'https://www.myryedo.com',
+        'http://localhost:3000',
+        'http://localhost:5173'
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
+
 app.use(express.urlencoded({ extended: true }));
+
 app.use(cookieParser());
 // Security headers
 app.use((req, res, next) => {
