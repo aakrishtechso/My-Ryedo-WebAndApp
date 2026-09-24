@@ -28,6 +28,7 @@ import { NotificationsPage } from './frontend/pages/NotificationsPage';
 import { AllVehiclesPage } from './frontend/pages/AllVehiclesPage';
 import { VehicleWaitlistPage } from './frontend/pages/VehicleWaitlistPage';
 import { backendService } from './backend/api.js';
+import { AdminDashboard } from './frontend/components/AdminDashboard';
 
 export default function App() {
   // Navigation & User State: MyRyedo always opens on Home. Authentication is required only for protected actions.
@@ -1067,106 +1068,228 @@ export default function App() {
           </section>
 
           {/* Requested Vehicle Near You section — no vehicle images and no shared VehicleCard changes. */}
-          <section id="vehicles-near-you" className="w-full py-8 sm:py-10">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex items-center justify-between gap-4 mb-5">
-                <h2 className="text-xl sm:text-2xl font-black text-[#111827]">Vehicles near you</h2>
-                <button
-                  type="button"
-                  onClick={() => { setCurrentView('all-vehicles'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                  className="text-xs sm:text-sm font-black text-[#1769D1] hover:underline"
-                >
-                  View All
-                </button>
+<section id="vehicles-near-you" className="w-full py-8 sm:py-10">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <div className="flex items-center justify-between gap-4 mb-5">
+      <h2 className="text-xl sm:text-2xl font-black text-[#111827]">
+        Vehicles near you
+      </h2>
+
+      <button
+        type="button"
+        onClick={() => {
+          setCurrentView('all-vehicles');
+          window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          });
+        }}
+        className="text-xs sm:text-sm font-black text-[#1769D1] hover:underline"
+      >
+        View All
+      </button>
+    </div>
+
+    {isLoadingVehicles ? (
+
+      <div className="h-24 rounded-3xl border border-slate-200 bg-white flex items-center justify-center">
+        <div className="w-7 h-7 border-3 border-[#FF6400] border-t-transparent rounded-full animate-spin" />
+      </div>
+
+    ) : vehicles.length === 0 || filteredVehicles.length === 0 ? (
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 text-center">
+        <h3 className="text-base sm:text-lg font-black text-slate-900">
+          No vehicles listed yet
+        </h3>
+
+        <button
+          type="button"
+          onClick={() => setCurrentView('list-vehicle')}
+          className="mt-4 inline-flex items-center justify-center bg-slate-900 text-white hover:bg-[#FF6400] px-5 py-3 rounded-xl text-xs font-black transition-colors"
+        >
+          List Your Vehicle
+        </button>
+      </div>
+
+    ) : (
+
+      <div
+        id="vehicles-near-you-grid"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5"
+      >
+        {filteredVehicles.map((vehicle) => {
+
+          const title =
+            vehicle?.name ||
+            [vehicle?.brand, vehicle?.model]
+              .filter(Boolean)
+              .join(' ') ||
+            'Vehicle';
+
+          const type =
+            vehicle?.category ||
+            vehicle?.type ||
+            'Vehicle';
+
+          const location =
+            vehicle?.location ||
+            vehicle?.pickupAddress ||
+            '';
+
+          const daily =
+            vehicle?.dailyRentalEnabled !== false &&
+            (vehicle?.dailyPrice ?? vehicle?.pricePerDay) != null
+              ? Number(
+                  vehicle.dailyPrice ??
+                  vehicle.pricePerDay
+                )
+              : 0;
+
+          const hourly =
+            vehicle?.hourlyRentalEnabled &&
+            vehicle?.hourlyPrice != null
+              ? Number(vehicle.hourlyPrice)
+              : 0;
+
+          const unavailable =
+            filters.pickupDate &&
+            filters.returnDate &&
+            unavailableVehicleIds.includes(
+              String(vehicle.id)
+            );
+
+          const available =
+            vehicle?.isAvailable !== false &&
+            !unavailable;
+
+          const price =
+            hourly > 0
+              ? `₹${hourly.toLocaleString('en-IN')} / hour`
+              : daily > 0
+                ? `₹${daily.toLocaleString('en-IN')} / day`
+                : 'Price shown during booking';
+
+          return (
+            <article
+              key={vehicle.id}
+              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow"
+            >
+
+              <div className="min-w-0">
+                <h3 className="text-base sm:text-lg font-black text-slate-900 truncate">
+                  {title}
+                </h3>
+
+                <p className="mt-1 text-xs text-slate-500 font-medium truncate">
+                  {type}
+                </p>
               </div>
 
-              {isLoadingVehicles ? (
-                <div className="h-24 rounded-3xl border border-slate-200 bg-white flex items-center justify-center">
-                  <div className="w-7 h-7 border-3 border-[#FF6400] border-t-transparent rounded-full animate-spin" />
+              <div className="mt-4 space-y-2 text-xs text-slate-600">
+
+                {location && (
+                  <div className="flex items-center gap-2 min-w-0">
+                    <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+
+                    <span className="truncate">
+                      {location}
+                    </span>
+                  </div>
+                )}
+
+                <div className="font-black text-slate-900">
+                  {price}
                 </div>
-<<<<<<< HEAD
-              ) : vehicles.length === 0 || filteredVehicles.length === 0 ? (
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 text-center">
-                  <h3 className="text-base sm:text-lg font-black text-slate-900">No vehicles listed yet</h3>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentView('list-vehicle')}
-                    className="mt-4 inline-flex items-center justify-center bg-slate-900 text-white hover:bg-[#FF6400] px-5 py-3 rounded-xl text-xs font-black transition-colors"
-                  >
-                    List Your Vehicle
-                  </button>
+
+                <div
+                  className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border ${
+                    available
+                      ? 'text-emerald-700 bg-emerald-50 border-emerald-100'
+                      : 'text-rose-700 bg-rose-50 border-rose-100'
+                  }`}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      available
+                        ? 'bg-emerald-500'
+                        : 'bg-rose-500'
+                    }`}
+                  />
+
+                  {vehicle?.isAvailable === false
+                    ? 'Unavailable'
+                    : unavailable
+                      ? 'Booked for selected time'
+                      : 'Available'}
                 </div>
-              ) : (
-=======
-              ) : vehicles.length === 0 || filteredVehicles.length === 0 ? null : (
->>>>>>> 76dd880975d6b69ab705ef26cc95d2b074c48323
-                <div id="vehicles-near-you-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-                  {filteredVehicles.map((vehicle) => {
-                    const title = vehicle?.name || [vehicle?.brand, vehicle?.model].filter(Boolean).join(' ') || 'Vehicle';
-                    const type = vehicle?.category || vehicle?.type || 'Vehicle';
-                    const location = vehicle?.location || vehicle?.pickupAddress || '';
-                    const daily = vehicle?.dailyRentalEnabled !== false && (vehicle?.dailyPrice ?? vehicle?.pricePerDay) != null
-                      ? Number(vehicle.dailyPrice ?? vehicle.pricePerDay)
-                      : 0;
-                    const hourly = vehicle?.hourlyRentalEnabled && vehicle?.hourlyPrice != null ? Number(vehicle.hourlyPrice) : 0;
-                    const unavailable = filters.pickupDate && filters.returnDate && unavailableVehicleIds.includes(String(vehicle.id));
-                    const available = vehicle?.isAvailable !== false && !unavailable;
-                    const price = hourly > 0
-                      ? `₹${hourly.toLocaleString('en-IN')} / hour`
-                      : daily > 0
-                        ? `₹${daily.toLocaleString('en-IN')} / day`
-                        : 'Price shown during booking';
 
-                    return (
-                      <article
-                        key={vehicle.id}
-                        className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow"
-                      >
-                        <div className="min-w-0">
-                          <h3 className="text-base sm:text-lg font-black text-slate-900 truncate">{title}</h3>
-                          <p className="mt-1 text-xs text-slate-500 font-medium truncate">{type}</p>
-                        </div>
+              </div>
 
-                        <div className="mt-4 space-y-2 text-xs text-slate-600">
-                          {location && (
-                            <div className="flex items-center gap-2 min-w-0">
-                              <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                              <span className="truncate">{location}</span>
-                            </div>
-                          )}
-                          <div className="font-black text-slate-900">{price}</div>
-                          <div className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border ${available ? 'text-emerald-700 bg-emerald-50 border-emerald-100' : 'text-rose-700 bg-rose-50 border-rose-100'}`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${available ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                            {vehicle?.isAvailable === false ? 'Unavailable' : unavailable ? 'Booked for selected time' : 'Available'}
-                          </div>
-                        </div>
+              <div className="mt-5 pt-4 border-t border-slate-100">
 
-                        <div className="mt-5 pt-4 border-t border-slate-100">
-                          <button
-                            type="button"
-                            onClick={() => unavailable
-                              ? handleInitiateBooking(vehicle, {
-                                  rentalType: vehicle.hourlyRentalEnabled && vehicle.dailyRentalEnabled === false ? 'hourly' : 'daily',
-                                  pickupDate: filters.pickupDate,
-                                  returnDate: filters.returnDate,
-                                  pickupTime: filters.pickupTime || '10:00',
-                                  returnTime: filters.returnTime || '10:00'
-                                })
-                              : currentUser?.role === 'owner'
-                                ? handleSelectVehicle(vehicle)
-                                : handleInitiateBooking(vehicle, filters.pickupDate, filters.returnDate)}
-                            className="w-full bg-slate-900 text-white hover:bg-[#FF6400] px-4 py-3 rounded-xl text-xs font-black transition-colors"
-                          >
-                            {unavailable ? 'Join Waiting List' : currentUser?.role === 'owner' ? 'View Vehicle' : 'Book'}
-                          </button>
-                        </div>
-                      </article>
+                <button
+                  type="button"
+                  onClick={() => {
+
+                    if (unavailable) {
+                      handleInitiateBooking(vehicle, {
+                        rentalType:
+                          vehicle.hourlyRentalEnabled &&
+                          vehicle.dailyRentalEnabled === false
+                            ? 'hourly'
+                            : 'daily',
+
+                        pickupDate:
+                          filters.pickupDate,
+
+                        returnDate:
+                          filters.returnDate,
+
+                        pickupTime:
+                          filters.pickupTime ||
+                          '10:00',
+
+                        returnTime:
+                          filters.returnTime ||
+                          '10:00'
+                      });
+
+                      return;
+                    }
+
+                    if (currentUser?.role === 'owner') {
+                      handleSelectVehicle(vehicle);
+                      return;
+                    }
+
+                    handleInitiateBooking(
+                      vehicle,
+                      filters.pickupDate,
+                      filters.returnDate
                     );
-                  })}
-                </div>
-              )}
-            </div>
-          </section>
+                  }}
+                  className="w-full bg-slate-900 text-white hover:bg-[#FF6400] px-4 py-3 rounded-xl text-xs font-black transition-colors"
+                >
+                  {unavailable
+                    ? 'Join Waiting List'
+                    : currentUser?.role === 'owner'
+                      ? 'View Vehicle'
+                      : 'Book'}
+                </button>
+
+              </div>
+
+            </article>
+          );
+        })}
+      </div>
+
+    )}
+
+  </div>
+</section>
 
           {/* Requested line/component after Vehicle Near You. Exact requested text only. */}
           <section className="w-full py-6 sm:py-8" aria-label="One place to find and share vehicles">
